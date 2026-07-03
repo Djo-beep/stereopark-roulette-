@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StereoPark Roulette</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#28105a,#080812 60%,#000);color:white;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;overflow-x:hidden}.app{width:100%;max-width:430px}.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:26px;padding:22px;box-shadow:0 0 35px rgba(160,70,255,.35);backdrop-filter:blur(8px)}h1{font-size:32px;margin:5px 0 8px;text-shadow:0 0 16px #b66cff}.sub{opacity:.9;margin:0 0 18px}.wheel-wrap{position:relative;width:310px;height:310px;margin:20px auto}.pointer{position:absolute;top:-8px;left:50%;transform:translateX(-50%);z-index:5;width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fff;filter:drop-shadow(0 0 10px #fff)}canvas{width:310px;height:310px;border-radius:50%;box-shadow:0 0 30px #913dff, inset 0 0 20px rgba(255,255,255,.25)}button{border:0;border-radius:999px;padding:16px 24px;font-size:18px;font-weight:800;color:#080812;background:linear-gradient(90deg,#00f5ff,#d946ef,#fff700);box-shadow:0 0 22px rgba(217,70,239,.75);cursor:pointer;width:100%;max-width:310px}button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}.result{margin-top:18px;font-size:22px;font-weight:800;min-height:62px;display:flex;align-items:center;justify-content:center}.small{font-size:13px;opacity:.72;margin-top:16px}.reset{margin-top:10px;background:transparent;color:white;border:1px solid rgba(255,255,255,.25);box-shadow:none;font-size:13px;padding:10px;max-width:220px}.confetti{position:fixed;width:9px;height:9px;top:-10px;animation:fall 1.8s linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}</style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <h1>🎡 STEREOPARK ROULETTE</h1>
+    <p class="sub">Scanne. Tourne. Relève ton défi.</p>
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="620" height="620"></canvas>
+    </div>
+    <button id="spinBtn">TOURNER LA ROUE</button>
+    <div class="result" id="result"></div>
+    <p class="small">Une seule chance par téléphone.</p>
+    <button class="reset" id="resetBtn">Réinitialiser pour test</button>
+  </div>
+</div>
+<script>
+const items=["🍺 Choisis mon prochain verre","📸 Selfie avec moi","💃 Danse 30 secondes","🎵 Choisis une musique","🤝 Check !","😂 Raconte une blague","🕺 Meilleur pas de danse","🎤 Chante un refrain","😎 Reviens avec un ami","🤟 Photo du t-shirt","❤️ Fais un compliment","🎁 Tu peux relancer"];
+const colors=["#00f5ff","#d946ef","#fff700","#22c55e","#fb7185","#a78bfa","#38bdf8","#f97316","#e879f9","#84cc16","#facc15","#06b6d4"];
+const canvas=document.getElementById('wheel'),ctx=canvas.getContext('2d'),btn=document.getElementById('spinBtn'),res=document.getElementById('result'),reset=document.getElementById('resetBtn');
+let angle=0,spinning=false;
+function draw(){const cx=310,cy=310,r=300,slice=2*Math.PI/items.length;ctx.clearRect(0,0,620,620);for(let i=0;i<items.length;i++){ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,angle+i*slice,angle+(i+1)*slice);ctx.closePath();ctx.fillStyle=colors[i];ctx.fill();ctx.save();ctx.translate(cx,cy);ctx.rotate(angle+i*slice+slice/2);ctx.textAlign='right';ctx.fillStyle='#080812';ctx.font='bold 26px Arial';ctx.fillText(items[i].slice(0,18),270,8);ctx.restore()}ctx.beginPath();ctx.arc(cx,cy,58,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.fillStyle='#111';ctx.font='bold 28px Arial';ctx.textAlign='center';ctx.fillText('SPIN',cx,cy+10)}
+function confetti(){for(let i=0;i<70;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.background=colors[Math.floor(Math.random()*colors.length)];d.style.animationDelay=Math.random()*0.5+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),2300)}}
+function hasPlayed(){return localStorage.getItem('stereoparkPlayed')==='yes'}
+function updatePlayed(){if(hasPlayed()){btn.disabled=true;btn.textContent='VOUS AVEZ DÉJÀ JOUÉ';res.textContent=localStorage.getItem('stereoparkResult')||'Déjà joué 🎉'}}
+btn.onclick=()=>{if(spinning||hasPlayed())return;spinning=true;btn.disabled=true;res.textContent='3... 2... 1...';let target=Math.floor(Math.random()*items.length),slice=2*Math.PI/items.length;let finalAngle=(Math.PI*1.5)-(target*slice+slice/2)+Math.PI*8;let start=angle,duration=4300,t0=null;function anim(t){if(!t0)t0=t;let p=Math.min((t-t0)/duration,1),ease=1-Math.pow(1-p,4);angle=start+(finalAngle-start)*ease;draw();if(p<1)requestAnimationFrame(anim);else{angle=finalAngle%(Math.PI*2);draw();let result=items[target];res.textContent=result;localStorage.setItem('stereoparkPlayed','yes');localStorage.setItem('stereoparkResult',result);btn.textContent='VOUS AVEZ DÉJÀ JOUÉ';confetti();if(navigator.vibrate)navigator.vibrate([120,80,120]);spinning=false}}requestAnimationFrame(anim)};
+reset.onclick=()=>{localStorage.removeItem('stereoparkPlayed');localStorage.removeItem('stereoparkResult');btn.disabled=false;btn.textContent='TOURNER LA ROUE';res.textContent='';};
+draw();updatePlayed();
+</script>
+</body>
+</html>
